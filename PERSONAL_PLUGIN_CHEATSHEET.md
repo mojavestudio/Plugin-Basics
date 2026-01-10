@@ -1697,6 +1697,496 @@ const accessCode = authAccessCode.trim().replace(/-/g, "")
 - Use `autoFocus` on email field for better UX
 - The `name` and `id` attributes combined with `autoComplete="current-password"` ensure browsers remember the access code even though it's a text field
 
+## Horizontal Layout with Live Preview
+
+### Overview
+Advanced horizontal layout pattern for plugins with live preview and positioned overlay controls. Perfect for visual components that need real-time feedback.
+
+### Core Architecture
+
+#### Layered Container System
+```tsx
+{/* Live Preview Container - Base Layer */}
+<div
+    className="preview"
+    style={{
+        background: "transparent",
+        position: "absolute",
+        top: "0px",
+        left: "0",
+        right: "0",
+        zIndex: "0",
+        width: "98%",
+        margin: "0 auto",
+        height: "300px",
+        overflow: "visible",
+    }}
+>
+    <svg width="100%" height="100%" viewBox="-150 -150 1500 1375">
+        {/* Your live preview content */}
+        <defs>
+            <linearGradient id="previewGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={colorStart} />
+                <stop offset="50%" stopColor={colorEnd} />
+                <stop offset="100%" stopColor={colorStart} />
+            </linearGradient>
+        </defs>
+        {/* Preview component */}
+    </svg>
+</div>
+
+{/* Overlay Container for Controls - Middle Layer */}
+<div
+    style={{
+        position: "absolute",
+        top: "0px",
+        left: "0",
+        right: "0",
+        width: "98%",
+        margin: "0 auto",
+        height: "300px",
+        pointerEvents: "none", // Disable all pointer events
+        zIndex: 1
+    }}
+>
+    {/* Individual controls with pointerEvents: "auto" */}
+    <button style={{ pointerEvents: "auto" }}>Insert</button>
+    <div style={{ pointerEvents: "auto" }}>Mode Toggle</div>
+</div>
+```
+
+### Key Components
+
+#### Multi-Color Picker Grid
+```tsx
+function MultiColorPicker({ 
+    colorStart, 
+    colorEnd, 
+    onChange 
+}: { 
+    colorStart: string
+    colorEnd: string
+    onChange: (type: 'colorStart' | 'colorEnd', value: string) => void 
+}) {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+            <label className="formLabel">Colors</label>
+            
+            <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "1fr 1fr", 
+                gap: "0",
+                borderRadius: "6px",
+                overflow: "hidden",
+                height: "32px",
+                boxSizing: "border-box"
+            }}>
+                {/* Color Start */}
+                <div style={{ 
+                    position: "relative", 
+                    height: "100%",
+                    overflow: "hidden"
+                }}>
+                    <input
+                        type="color"
+                        value={colorStart}
+                        onChange={(e) => onChange('colorStart', e.target.value)}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            opacity: 0,
+                            cursor: "pointer",
+                            border: "none",
+                            padding: 0,
+                            margin: 0,
+                            zIndex: 2
+                        }}
+                    />
+                    <div
+                        style={{
+                            backgroundColor: colorStart,
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            borderRight: "1px solid var(--border-soft)",
+                            boxSizing: "border-box",
+                            pointerEvents: "none",
+                            zIndex: 1
+                        }}
+                    />
+                </div>
+                
+                {/* Color End */}
+                <div style={{ 
+                    position: "relative", 
+                    height: "100%",
+                    overflow: "hidden"
+                }}>
+                    <input
+                        type="color"
+                        value={colorEnd}
+                        onChange={(e) => onChange('colorEnd', e.target.value)}
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            opacity: 0,
+                            cursor: "pointer",
+                            border: "none",
+                            padding: 0,
+                            margin: 0,
+                            zIndex: 2
+                        }}
+                    />
+                    <div
+                        style={{
+                            backgroundColor: colorEnd,
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            boxSizing: "border-box",
+                            pointerEvents: "none",
+                            zIndex: 1
+                        }}
+                    />
+                </div>
+            </div>
+        </div>
+    )
+}
+```
+
+#### Vertical Slider Component
+```tsx
+function VerticalSlider({ 
+    value, 
+    onChange, 
+    min = -400, 
+    max = 400, 
+    step = 5 
+}: {
+    value: number
+    onChange: (value: number) => void
+    min?: number
+    max?: number
+    step?: number
+}) {
+    return (
+        <div style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "4px",
+            width: "32px",
+        }}>
+            <span style={{
+                fontSize: "12px",
+                color: "var(--text-primary)",
+                fontWeight: "600",
+            }}>
+                +
+            </span>
+            <input
+                type="range"
+                className="slider-vertical"
+                value={value}
+                onChange={(e) => onChange(Number(e.target.value))}
+                min={min}
+                max={max}
+                step={step}
+                style={{
+                    width: "3px",
+                    height: "60px",
+                    outline: "none",
+                    cursor: "pointer",
+                    writingMode: "vertical-lr", // Standard CSS
+                    WebkitAppearance: "slider-vertical", // WebKit
+                    // Invert progress for intuitive up=more behavior
+                    ["--slider-progress" as any]: `${100 - Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100))}%`,
+                }}
+            />
+        </div>
+    )
+}
+```
+
+#### Mode Toggle Overlay
+```tsx
+function ModeToggle({ mode, onChange }: {
+    mode: string
+    onChange: (mode: string) => void
+}) {
+    return (
+        <div style={{
+            position: "absolute",
+            bottom: "93px",
+            left: "15px",
+            transform: "translateY(40px)",
+            display: "flex",
+            background: "var(--border-soft)",
+            borderRadius: "6px",
+            padding: "2px",
+            gap: "4px",
+            zIndex: 1,
+            height: "32px",
+            pointerEvents: "auto"
+        }}>
+            <button
+                onClick={() => onChange("mode1")}
+                style={{
+                    flex: 1,
+                    padding: "6px",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    background: mode === "mode1" ? "var(--accent-primary)" : "transparent",
+                    color: mode === "mode1" ? "white" : "var(--text-primary)",
+                    transition: "all 0.2s",
+                    height: "28px"
+                }}
+            >
+                <Mode1Icon />
+            </button>
+            <button
+                onClick={() => onChange("mode2")}
+                style={{
+                    flex: 1,
+                    padding: "6px",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    background: mode === "mode2" ? "var(--accent-primary)" : "transparent",
+                    color: mode === "mode2" ? "white" : "var(--text-primary)",
+                    transition: "all 0.2s",
+                    height: "28px"
+                }}
+            >
+                <Mode2Icon />
+            </button>
+        </div>
+    )
+}
+```
+
+#### Controls Grid Layout
+```tsx
+<div className="controlsGrid" style={{ marginTop: "210px" }}>
+    <div className="controlGroup">
+        <MultiColorPicker
+            colorStart={controls.colorStart}
+            colorEnd={controls.colorEnd}
+            onChange={(type, value) => updateControl(type, value)}
+        />
+    </div>
+    
+    <div className="controlGroup">
+        <label className="formLabel">Property</label>
+        <NumberInput
+            value={controls.property}
+            onChange={(value) => updateControl("property", value)}
+            min={10}
+            max={200}
+            step={1}
+        />
+    </div>
+    
+    <div className="controlGroup">
+        <label className="formLabel">Visual Property</label>
+        <div style={{
+            height: "32px",
+            display: "flex",
+            alignItems: "center",
+            gap: "2px",
+            cursor: "pointer",
+            position: "relative"
+        }}
+        onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            const x = e.clientX - rect.left
+            const percent = Math.max(0, Math.min(1, x / rect.width))
+            const value = min + percent * (max - min)
+            updateControl("property", Math.round(value / step) * step)
+        }}
+        >
+            {[...Array(20)].map((_, i) => {
+                const percent = i / 19
+                const isActive = percent <= (controls.property - min) / (max - min)
+                const height = 20 + percent * 80 // Visual height mapping
+                return (
+                    <div
+                        key={i}
+                        style={{
+                            flex: 1,
+                            height: `${height}%`,
+                            background: isActive ? "var(--accent-primary)" : "var(--border-soft)",
+                            borderRadius: "2px",
+                            transition: "all 0.2s"
+                        }}
+                    />
+                )
+            })}
+        </div>
+    </div>
+</div>
+```
+
+### CSS Classes
+
+```css
+.controlsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 0 20px;
+}
+
+.controlGroup {
+    display: flex;
+    flex-direction: "column";
+    gap: 8px;
+}
+
+.controlGroup--wide {
+    grid-column: span 2;
+}
+
+.slider-vertical {
+    writing-mode: vertical-lr;
+    WebkitAppearance: slider-vertical;
+    background: linear-gradient(
+        to top,
+        var(--accent-primary) var(--slider-progress),
+        var(--border-soft) var(--slider-progress)
+    );
+}
+
+.slider-vertical::-webkit-slider-track {
+    background: transparent;
+}
+
+.slider-vertical::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+```
+
+### Positioning Strategy
+
+#### Common Overlay Positions
+```tsx
+// Top-right: Primary actions
+<button style={{
+    position: "absolute",
+    top: "20px",
+    right: "20px",
+    pointerEvents: "auto"
+}}>Insert</button>
+
+// Bottom-left: Mode selection
+<div style={{
+    position: "absolute",
+    bottom: "93px",
+    left: "15px",
+    pointerEvents: "auto"
+}}>Mode Toggle</div>
+
+// Right edge: Fine controls
+<div style={{
+    position: "absolute",
+    bottom: "53px",
+    right: "20px",
+    pointerEvents: "auto"
+}}>Vertical Slider</div>
+
+// Below preview: Detailed controls
+<div style={{ marginTop: "210px" }}>
+    <div className="controlsGrid">
+        {/* Grid controls */}
+    </div>
+</div>
+```
+
+### Responsive Considerations
+
+```tsx
+// Responsive width for different screen sizes
+const previewWidth = window.innerWidth < 600 ? "100%" : "98%"
+
+// Adjust control positions for mobile
+const isMobile = window.innerWidth < 768
+const controlPositions = isMobile ? {
+    top: "10px",
+    right: "10px",
+    bottom: "50px",
+    left: "10px"
+} : {
+    top: "20px",
+    right: "20px",
+    bottom: "93px",
+    left: "15px"
+}
+```
+
+### Performance Tips
+
+1. **Use requestAnimationFrame** for smooth animations
+2. **Debounce control updates** to prevent excessive re-renders
+3. **Optimize SVG viewBox** for negative padding scenarios
+4. **Use CSS transforms** instead of changing position properties
+
+```tsx
+// Debounced control update
+const debouncedUpdate = useMemo(
+    () => debounce((key, value) => {
+        setControls(prev => ({ ...prev, [key]: value }))
+    }, 16), // 60fps
+    []
+)
+
+// Smooth animation loop
+useEffect(() => {
+    let frame: number
+    const start = performance.now()
+    
+    const loop = (now: number) => {
+        const t = (now - start) / 1000
+        setPhase(t * controls.speed)
+        frame = requestAnimationFrame(loop)
+    }
+    
+    frame = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(frame)
+}, [controls.speed])
+```
+
+### Integration Checklist
+
+- [ ] Set up layered container system with proper z-index
+- [ ] Implement pointer events management (none on container, auto on controls)
+- [ ] Create responsive width with margin auto
+- [ ] Position controls absolutely relative to preview
+- [ ] Use Framer CSS custom properties for theming
+- [ ] Add smooth transitions for interactive elements
+- [ ] Implement proper focus management
+- [ ] Test with different preview sizes and content
+- [ ] Ensure accessibility with proper labels and keyboard navigation
+
 ---
 
 **Remember**: This contains proprietary workflows and shortcuts. Never share this file publicly or include it in plugin packages.
