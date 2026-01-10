@@ -1,0 +1,12 @@
+{
+  "name": "plugin-basics",
+  "version": "1.0.0",
+  "description": "Framer Plugin Development Documentation",
+  "scripts": {
+    "build": "echo 'No build step needed - static site'",
+    "preview": "python3 -m http.server 8000 || python -m SimpleHTTPServer 8000"
+  },
+  "keywords": ["framer", "plugin", "documentation"],
+  "author": "",
+  "license": "MIT"
+}
