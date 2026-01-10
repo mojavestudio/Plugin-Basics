@@ -52,6 +52,7 @@ const PLUGIN_CONFIG = {
 - Modes: Ribbon / Ring toggle overlays live preview.
 - Controls: Lines, Thickness, Amplitude, Padding (vertical slider with negative overshoot), Angle, Taper, Speed, Colors (start/end/background).
 - Settings popover: User Guide + Sign Out; insert button shows loading while adding.
+- Framer already renders a plugin title/header chrome above your UI. Don’t duplicate it with an in-panel `<h1>`/`<h2>`—leave that vertical space for primary controls.
 
 ### Publishing steps
 
@@ -278,6 +279,141 @@ return (
   </div>
 )
 ```
+
+## Color Picker Slider Snippet
+
+Use this pattern when you need hue/opacity sliders that show a circular indicator without the native progress bar fill:
+
+```tsx
+<div className="framerColorSliderWrapper" style={{ background: hueGradient }}>
+  <div className="framerColorHueCircle" style={{ left: `${(h / 360) * 100}%` }} />
+  <input
+    className="framerColorHue"
+    type="range"
+    min={0}
+    max={360}
+    value={Math.round(h)}
+    onChange={...}
+  />
+</div>
+<div className="framerColorSliderWrapper" style={{ background: opacityGradient }}>
+  <div className="framerColorAlphaCircle" style={{ left: `${alpha * 100}%` }} />
+  <input
+    className="framerColorAlpha"
+    type="range"
+    min={0}
+    max={100}
+    value={Math.round(alpha * 100)}
+    onChange={...}
+  />
+</div>
+```
+
+CSS helpers that keep the gradient visible while hiding the native progress fill:
+
+```css
+.framerColorSliderWrapper input {
+  opacity: 0;
+}
+
+.framerColorSliderWrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.framerColorHueCircle,
+.framerColorAlphaCircle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.framerColorHue::-webkit-slider-progress,
+.framerColorAlpha::-webkit-slider-progress,
+.framerColorHue::-moz-range-progress,
+.framerColorAlpha::-moz-range-progress {
+  background: transparent !important;
+  height: 0;
+  display: none;
+}
+```
+
+This preserves the gradient background while the circular dot shows the current value.
+
+## Carousel Icon Picker Snippet
+
+Use this pattern when you want a horizontally scrolling icon picker with previous/next arrows and an active glow state:
+
+```tsx
+const ICON_OPTIONS = ["MagicWand", "Wheelchair", "TextAa", "PersonSimple"] as const
+
+function IconCarouselPicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (next: string) => void
+}) {
+  const trackRef = useRef<HTMLDivElement | null>(null)
+
+  return (
+    <div className="iconCarousel" role="listbox" aria-label="Launcher icon">
+      <button
+        type="button"
+        className="iconCarousel-arrow"
+        aria-label="Previous icon"
+        onClick={() => {
+          const currentIndex = ICON_OPTIONS.indexOf(value)
+          const nextIndex = (currentIndex - 1 + ICON_OPTIONS.length) % ICON_OPTIONS.length
+          onChange(ICONS[nextIndex])
+        }}
+      >
+        ‹
+      </button>
+      <div className="iconCarousel-track" ref={trackRef}>
+        {ICON_OPTIONS.map((iconKey, idx) => (
+          <button
+            key={iconKey}
+            type="button"
+            className={`iconCarousel-item ${iconKey === value ? "active" : ""}`}
+            aria-selected={iconKey === value}
+            data-index={idx}
+            onClick={() => onChange(iconKey)}
+          >
+            <span className="iconCarousel-label">{iconKey}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="iconCarousel-arrow"
+        aria-label="Next icon"
+        onClick={() => {
+          const currentIndex = ICON_OPTIONS.indexOf(value)
+          const nextIndex = (currentIndex + 1) % ICON_OPTIONS.length
+          onChange(ICON_OPTIONS[nextIndex])
+        }}
+      >
+        ›
+      </button>
+    </div>
+  )
+}
+```
+
+The CSS defined under `.iconCarousel`, `.iconCarousel-track`, `.iconCarousel-item`, and `.iconCarousel-arrow` in `App.css` already provide the groove, snapping, and active glow; reuse them by placing this component inside a card and pairing it with the `.widgetLauncher-field` layout.
 
 ### Component Template (PluginComponent.tsx)
 ```tsx
@@ -1055,6 +1191,191 @@ Background colors use theme tokens:
 - `var(--input-background)` - Input field backgrounds
 - `var(--ghost-bg)` - Subtle hover backgrounds
 
+### Text Input Styling
+
+#### Monospace Font for Text Inputs
+Apply monospace font to all text inputs and textareas for consistent technical styling:
+
+```css
+/* Editor section inputs */
+.editor-section input,
+.editor-section textarea {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+/* Login form inputs */
+.login-field input {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+/* Dropdown/select menus */
+.editor-section select,
+.input-with-clear select {
+  font-family: monospace;
+}
+```
+
+Usage notes:
+- Applied to accessibility checker inputs for document title, language, labels, alt text, and media descriptions
+- Applied to login form email and access code fields
+- Applied to dropdown/select menus for role selection and tag filtering
+- Maintains consistent spacing and readability across all text entry fields
+
+### Number Input with +/- Stepper Buttons
+
+Number inputs with custom +/- stepper buttons for better UX and visual consistency.
+
+#### CSS Styling
+```css
+/* NumberInput w/ +/- stepper (cheatsheet-style) */
+.numberStepper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  background: var(--input-background);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.numberStepper:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-focus-ring);
+}
+
+.numberStepper input[type="number"] {
+  flex: 1 1 auto;
+  border: none;
+  background: transparent;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.numberStepper input[type="number"]:focus-visible {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.numberStepper-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 10px 0 0;
+  flex: 0 0 auto;
+}
+
+.numberStepper-sep {
+  color: var(--text-secondary);
+  opacity: 0.75;
+  font-size: 13px;
+  line-height: 1;
+  user-select: none;
+}
+
+.numberStepper-btn {
+  height: 28px;
+  width: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+}
+
+.numberStepper-btn:hover:not(:disabled),
+.numberStepper-btn:active:not(:disabled),
+.numberStepper-btn:focus:not(:disabled) {
+  background: transparent;
+  outline: none;
+}
+
+.numberStepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Remove browser spinner chrome from number inputs */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+```
+
+#### Component Usage
+```tsx
+<label className="widgetLauncher-field">
+    <span>Padding</span>
+    <div className="numberStepper">
+        <input
+            type="number"
+            min={6}
+            max={24}
+            step={1}
+            inputMode="numeric"
+            value={value}
+            onChange={e => onChange(Number(e.target.value) || defaultValue)}
+            aria-label="Padding"
+        />
+        <div className="numberStepper-controls" aria-hidden={false}>
+            <button
+                type="button"
+                className="numberStepper-btn"
+                aria-label="Decrease padding"
+                onClick={() => onChange(Math.max(min, value - 1))}
+                disabled={value <= min}
+            >
+                -
+            </button>
+            <span className="numberStepper-sep" aria-hidden>
+                |
+            </span>
+            <button
+                type="button"
+                className="numberStepper-btn"
+                aria-label="Increase padding"
+                onClick={() => onChange(Math.min(max, value + 1))}
+                disabled={value >= max}
+            >
+                +
+            </button>
+        </div>
+    </div>
+</label>
+```
+
+#### Key Features
+- **Container**: `.numberStepper` wraps the input and controls in a single bordered container
+- **Input**: Borderless, transparent background, flex-grows to fill available space
+- **Controls**: Right-aligned buttons with separator (`|`) between them
+- **Buttons**: 28x28px transparent buttons with `-` and `+` symbols, disabled state at min/max
+- **Focus**: Container shows focus ring when input is focused (`:focus-within`)
+- **Accessibility**: Proper `aria-label` attributes on buttons and input
+- **Browser spinners**: Removed via CSS (appearance: textfield, webkit spinner removal)
+
+#### Behavior
+- Buttons automatically disable when value reaches `min` or `max`
+- Uses `Math.max()` and `Math.min()` to enforce bounds
+- Input accepts direct typing and respects min/max/step attributes
+- Container border changes color on focus (accent-primary with focus ring)
+- Buttons have no background on hover/active (transparent), only opacity change on disabled
+
 ### Menu Organization
 
 #### SettingsGroup Component
@@ -1297,6 +1618,84 @@ For labels that appear inline with inputs:
     transform: rotate(45deg);
 }
 ```
+
+### Access Code Formatting (0000-0000)
+
+For plugins that require access codes in the format `0000-0000`, use this formatting function:
+
+```tsx
+// Format access code to 0000-0000 format
+function formatAccessCode(value: string): string {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, "")
+    // Limit to 8 digits
+    const limited = digits.slice(0, 8)
+    // Format as 0000-0000
+    if (limited.length <= 4) {
+        return limited
+    }
+    return `${limited.slice(0, 4)}-${limited.slice(4)}`
+}
+
+// Usage in input field with autofill memory
+<label className="login-field">
+    <span>Email</span>
+    <input
+        type="email"
+        name="email"
+        id="login-email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="your@email.com"
+        autoComplete="username"
+        autoFocus
+    />
+</label>
+<label className="login-field">
+    <span>Access Code</span>
+    <input
+        type="text"
+        name="access-code"
+        id="login-access-code"
+        value={accessCode}
+        onChange={e => {
+            const formatted = formatAccessCode(e.target.value)
+            setAccessCode(formatted)
+        }}
+        placeholder="0000-0000"
+        autoComplete="current-password"
+        maxLength={9}
+        onKeyDown={e => {
+            if (e.key === "Enter") {
+                handleLogin()
+            }
+        }}
+        style={{ fontFamily: "monospace", letterSpacing: "2px" }}
+    />
+</label>
+
+// In login handler, remove dashes before validation
+const accessCode = authAccessCode.trim().replace(/-/g, "")
+```
+
+**Key points:**
+- Strips all non-digit characters automatically
+- Limits to 8 digits maximum
+- Adds dash after 4th digit
+- `maxLength={9}` prevents over-typing
+- Remove dashes in validation: `accessCode.replace(/-/g, "")`
+
+**Autofill Memory Setup:**
+- Add `name` and `id` attributes to inputs for browser recognition
+- Email field: `autoComplete="username"` (browsers recognize this for credential autofill)
+- Access code field: 
+  - Use `type="text"` (visible, not hidden)
+  - `autoComplete="current-password"` (treats it as a credential to remember, even with text type)
+  - Add `style={{ fontFamily: "monospace", letterSpacing: "2px" }}` for better readability of formatted code
+  - The combination of `name`, `id`, and `autoComplete="current-password"` enables browser autofill memory
+- Browser will remember and suggest previously entered email/access code combinations
+- Use `autoFocus` on email field for better UX
+- The `name` and `id` attributes combined with `autoComplete="current-password"` ensure browsers remember the access code even though it's a text field
 
 ---
 
