@@ -263,6 +263,69 @@
     </div>
     
     <script>
+        // Password configuration
+        const CORRECT_PASSWORD = 'agent123';
+        const AUTH_KEY = 'plugin_basics_auth';
+        
+        // Check authentication status
+        function isAuthenticated() {
+            return sessionStorage.getItem(AUTH_KEY) === 'true';
+        }
+        
+        // Set authentication status
+        function setAuthenticated(value) {
+            if (value) {
+                sessionStorage.setItem(AUTH_KEY, 'true');
+            } else {
+                sessionStorage.removeItem(AUTH_KEY);
+            }
+        }
+        
+        // Show login screen
+        function showLogin() {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-content').classList.remove('authenticated');
+            document.getElementById('password-input').value = '';
+            document.getElementById('password-input').focus();
+        }
+        
+        // Show main content
+        function showMainContent() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-content').classList.add('authenticated');
+            initializeContent();
+        }
+        
+        // Handle login form submission
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password-input').value;
+            const errorMessage = document.getElementById('error-message');
+            
+            if (password === CORRECT_PASSWORD) {
+                setAuthenticated(true);
+                errorMessage.classList.remove('show');
+                showMainContent();
+            } else {
+                errorMessage.classList.add('show');
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').focus();
+            }
+        });
+        
+        // Handle logout
+        document.getElementById('logout-button').addEventListener('click', () => {
+            setAuthenticated(false);
+            showLogin();
+        });
+        
+        // Check authentication on page load
+        if (isAuthenticated()) {
+            showMainContent();
+        } else {
+            showLogin();
+        }
+        
         // Configure marked
         marked.setOptions({
             highlight: function(code, lang) {
@@ -294,53 +357,56 @@
             }
         }
         
-        // Navigation
-        const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const file = link.getAttribute('data-page');
-                
-                // Update active state
-                navLinks.forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                
-                // Load the file
-                loadMarkdown(file);
-                
-                // Update URL without reload
-                window.history.pushState({ file }, '', `?page=${encodeURIComponent(file)}`);
-            });
-        });
-        
-        // Load initial page from URL or default
-        const urlParams = new URLSearchParams(window.location.search);
-        const initialPage = urlParams.get('page') || 'PERSONAL_PLUGIN_CHEATSHEET.md';
-        loadMarkdown(initialPage);
-        
-        // Update active nav based on URL
-        navLinks.forEach(link => {
-            if (link.getAttribute('data-page') === initialPage) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
-        });
-        
-        // Handle browser back/forward
-        window.addEventListener('popstate', (e) => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const page = urlParams.get('page') || 'PERSONAL_PLUGIN_CHEATSHEET.md';
-            loadMarkdown(page);
-            
+        // Initialize content (only called after authentication)
+        function initializeContent() {
+            // Navigation
+            const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
-                if (link.getAttribute('data-page') === page) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const file = link.getAttribute('data-page');
+                    
+                    // Update active state
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    // Load the file
+                    loadMarkdown(file);
+                    
+                    // Update URL without reload
+                    window.history.pushState({ file }, '', `?page=${encodeURIComponent(file)}`);
+                });
+            });
+            
+            // Load initial page from URL or default
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialPage = urlParams.get('page') || 'PERSONAL_PLUGIN_CHEATSHEET.md';
+            loadMarkdown(initialPage);
+            
+            // Update active nav based on URL
+            navLinks.forEach(link => {
+                if (link.getAttribute('data-page') === initialPage) {
                     link.classList.add('active');
                 } else {
                     link.classList.remove('active');
                 }
             });
-        });
+            
+            // Handle browser back/forward
+            window.addEventListener('popstate', (e) => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const page = urlParams.get('page') || 'PERSONAL_PLUGIN_CHEATSHEET.md';
+                loadMarkdown(page);
+                
+                navLinks.forEach(link => {
+                    if (link.getAttribute('data-page') === page) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>
