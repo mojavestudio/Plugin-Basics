@@ -1119,6 +1119,8 @@ const VisualsSlider = ({
     max,
     step = 1,
     lineCount = 12,
+    label = "Width",
+    variant = "height",
 }: {
     value: number
     onChange: (value: number) => void
@@ -1126,6 +1128,8 @@ const VisualsSlider = ({
     max: number
     step?: number
     lineCount?: number
+    label?: string
+    variant?: "width" | "height"
 }) => {
     const range = max - min
     const normalizedValue = Math.max(0, Math.min(1, (value - min) / range))
@@ -1135,14 +1139,16 @@ const VisualsSlider = ({
         if (!container) return
         const rect = container.getBoundingClientRect()
         const percent = (event.clientX - rect.left) / rect.width
-        const newValue = min + percent * range
+        // Add a small buffer to make the last line selectable
+        const adjustedPercent = Math.min(1, percent + (0.5 / lineCount))
+        const newValue = min + adjustedPercent * range
         onChange(Math.max(min, Math.min(max, newValue)))
     }
     
     return (
-        <div className="visualsSlider">
+        <div className={`visualsSlider visualsSlider--${variant}`}>
             <div className="visualsSlider-lines" onPointerDown={handlePointerDown}>
-                <div className="visualsSlider-label">Width</div>
+                <div className="visualsSlider-label">{label}</div>
                 <div className="visualsSlider-content">
                     {Array.from({ length: lineCount }).map((_, index) => {
                         const linePosition = (index + 1) / lineCount
@@ -1217,11 +1223,20 @@ const VisualsSlider = ({
     background: var(--accent-primary);
     opacity: 1;
 }
+
+/* Variant-specific styling */
+.visualsSlider--width .visualsSlider-label {
+    /* Custom styling for width variant if needed */
+}
+
+.visualsSlider--height .visualsSlider-label {
+    /* Custom styling for height variant if needed */
+}
 ```
 
 **Usage Examples:**
 ```tsx
-// Track Thickness (1-8 range, 12 lines)
+// Track Thickness (1-8 range, 12 lines) - Height variant
 <label>
     <span>Track Thickness</span>
     <VisualsSlider
@@ -1234,10 +1249,12 @@ const VisualsSlider = ({
         max={8}
         step={0.5}
         lineCount={12}
+        label="Width"
+        variant="height"
     />
 </label>
 
-// Border Width (1-6 range, 16 lines)
+// Border Width (1-6 range, 16 lines) - Width variant
 <label>
     <span>Border Width</span>
     <VisualsSlider
@@ -1250,9 +1267,35 @@ const VisualsSlider = ({
         max={6}
         step={0.5}
         lineCount={16}
+        label="Width"
+        variant="width"
+    />
+</label>
+
+// Bar Height (1-20 range, 12 lines) - Height variant with custom label
+<label>
+    <span>Bar Height</span>
+    <VisualsSlider
+        value={controls.barHeight}
+        onChange={(value) => setControls(prev => ({
+            ...prev,
+            barHeight: value
+        }))}
+        min={1}
+        max={20}
+        step={1}
+        lineCount={12}
+        label="Height"
+        variant="height"
     />
 </label>
 ```
+
+**Key Improvements:**
+- **Last Line Selection Fix**: Added buffer calculation (`percent + (0.5 / lineCount)`) to ensure the last line is fully selectable
+- **Label Prop**: Customizable label text (defaults to "Width")
+- **Variant Prop**: Distinguishes between "width" and "height" usage patterns for consistent styling
+- **CSS Classes**: Component supports variant-specific CSS classes (`.visualsSlider--width`, `.visualsSlider--height`)
 
 **When to Use Each:**
 - **Standard Range Input**: When precise numerical feedback is important
