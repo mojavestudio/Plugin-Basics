@@ -2524,6 +2524,253 @@ useEffect(() => {
 - [ ] Test with different preview sizes and content
 - [ ] Ensure accessibility with proper labels and keyboard navigation
 
+## Horizontal Layout Patterns
+
+Two main approaches for horizontal plugin layouts: simple single-page and multi-tab systems.
+
+### Option 1: Simple Single-Page Layout
+Best for plugins with focused functionality and minimal controls.
+
+**Structure:**
+```tsx
+function SimpleHorizontalPlugin() {
+    return (
+        <div className="pluginRoot">
+            {/* Header */}
+            <header className="pluginHeader">
+                <h1>Plugin Name</h1>
+                <p>Brief description</p>
+            </header>
+
+            {/* Main Content - Side by Side */}
+            <main className="pluginBody">
+                {/* Left: Preview */}
+                <section className="previewPanel">
+                    <div className="previewCanvas">
+                        {/* Your live preview component */}
+                    </div>
+                </section>
+
+                {/* Right: Controls */}
+                <section className="settingsPanel">
+                    <div className="settingsGroup">
+                        <h3>Basic Settings</h3>
+                        <div className="settingsGrid">
+                            {/* Your controls */}
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            {/* Footer Actions */}
+            <footer className="pluginActionBar">
+                <button className="primary">Insert Component</button>
+            </footer>
+        </div>
+    )
+}
+```
+
+**CSS for Simple Layout:**
+```css
+.pluginRoot {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+.pluginHeader {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.pluginBody {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+}
+
+.previewPanel,
+.settingsPanel {
+    background: var(--surface-card);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.previewCanvas {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-panel);
+    border-radius: 8px;
+    min-height: 200px;
+}
+```
+
+### Option 2: Multi-Tab Layout (Current Loading Plugin Approach)
+Best for complex plugins with organized feature categories.
+
+**Structure:**
+```tsx
+function MultiTabHorizontalPlugin() {
+    const [activeTab, setActiveTab] = useState('preview')
+    
+    return (
+        <div className="pluginRoot">
+            {/* Header with Tabs */}
+            <header className="pluginHeader">
+                <nav className="pluginTabs">
+                    <button 
+                        className={`pluginTab ${activeTab === 'preview' ? 'is-active' : ''}`}
+                        onClick={() => setActiveTab('preview')}
+                    >
+                        Preview
+                    </button>
+                    <button 
+                        className={`pluginTab ${activeTab === 'settings' ? 'is-active' : ''}`}
+                        onClick={() => setActiveTab('settings')}
+                    >
+                        Settings
+                    </button>
+                    <button 
+                        className={`pluginTab ${activeTab === 'advanced' ? 'is-active' : ''}`}
+                        onClick={() => setActiveTab('advanced')}
+                    >
+                        Advanced
+                    </button>
+                </nav>
+            </header>
+
+            {/* Tab Content */}
+            <main className="pluginBody">
+                {activeTab === 'preview' && (
+                    <div className="tabContent">
+                        <div className="previewPanel">
+                            <div className="previewCanvas">
+                                {/* Live preview */}
+                            </div>
+                        </div>
+                        <div className="settingsPanel">
+                            {/* Quick controls for preview */}
+                        </div>
+                    </div>
+                )}
+                
+                {activeTab === 'settings' && (
+                    <div className="tabContent">
+                        <div className="settingsPanel full-width">
+                            {/* Detailed settings */}
+                        </div>
+                    </div>
+                )}
+                
+                {activeTab === 'advanced' && (
+                    <div className="tabContent">
+                        <div className="settingsPanel full-width">
+                            {/* Advanced options */}
+                        </div>
+                    </div>
+                )}
+            </main>
+
+            {/* Footer Actions */}
+            <footer className="pluginActionBar">
+                <button className="primary">Insert Component</button>
+            </footer>
+        </div>
+    )
+}
+```
+
+**CSS for Multi-Tab Layout:**
+```css
+.pluginTabs {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0 10px;
+    margin: 0 0 6px;
+    border-bottom: 1px solid var(--border-soft);
+    overflow-x: auto;
+}
+
+.pluginTab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 4px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.pluginTab:hover {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-strong);
+}
+
+.pluginTab.is-active {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent-primary);
+    font-weight: 700;
+}
+
+.tabContent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    height: 100%;
+}
+
+.tabContent .settingsPanel.full-width {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+    .tabContent {
+        grid-template-columns: 1fr;
+    }
+}
+```
+
+### When to Use Each Approach
+
+**Simple Single-Page:**
+- Few controls (5-10 settings)
+- Single focused feature
+- Quick setup and interaction
+- Minimal learning curve
+- Examples: Color picker, simple generator, basic configurator
+
+**Multi-Tab Layout:**
+- Many controls (15+ settings)
+- Multiple feature categories
+- Complex configuration options
+- Need for organization and clarity
+- Examples: Advanced component builders, theme generators, animation editors
+
+### Hybrid Approach
+Combine both benefits with a primary preview tab and secondary settings tabs:
+
+```tsx
+// Primary tab shows preview + essential controls
+// Secondary tabs organize advanced settings
+// Keeps focus on visual feedback while providing depth
+```
+
 ---
 
 **Remember**: This contains proprietary workflows and shortcuts. Never share this file publicly or include it in plugin packages.
