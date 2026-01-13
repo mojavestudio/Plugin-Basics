@@ -93,14 +93,14 @@ All colors are defined as CSS custom properties (variables) in the `:root` selec
 
 #### Standard Input Styling
 
-Dropdowns, text inputs, and number boxes use the `#1D1D1D` background:
+**IMPORTANT**: Use `var(--surface-card)` instead of hardcoded colors for proper light/dark mode support:
 
 ```css
 input[type="text"],
 input[type="email"],
 input[type="number"],
 select {
-    background: #1D1D1D;
+    background: var(--surface-card);
     color: var(--text-primary);
     border: 1px solid var(--border-soft);
     border-radius: 4px;
@@ -111,6 +111,19 @@ select {
     width: 100%;
     box-sizing: border-box;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Custom dropdown buttons also need theme-aware backgrounds */
+.custom-dropdown-button {
+    background: var(--surface-card);
+    color: var(--text-primary);
+    /* ... other styles */
+}
+
+/* NumberInput component container */
+.numberInput {
+    background: var(--surface-card);
+    /* ... other styles */
 }
 ```
 
@@ -153,6 +166,41 @@ interface FramerColorProfile {
   cardShadow: string;      // Card shadow - CSS shadow value
 }
 ```
+
+#### Dynamic Text Contrast for Color Labels
+
+When displaying text over colored backgrounds (like "Color" labels on color pickers), use this utility to ensure readability:
+
+```typescript
+// Utility function to calculate luminance and determine appropriate text color
+function getContrastTextColor(hexColor: string): string {
+    // Remove # if present
+    const hex = hexColor.replace("#", "")
+    
+    // Parse hex to RGB
+    const r = parseInt(hex.substring(0, 2), 16)
+    const g = parseInt(hex.substring(2, 4), 16)
+    const b = parseInt(hex.substring(4, 6), 16)
+    
+    // Calculate luminance using relative luminance formula
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    
+    // Return white text for dark backgrounds, black for light backgrounds
+    return luminance > 0.5 ? "#000000" : "#ffffff"
+}
+```
+
+**Usage Example:**
+```tsx
+<span 
+    className="color-label" 
+    style={{ color: getContrastTextColor(backgroundColor) }}
+>
+    Color
+</span>
+```
+
+This ensures text remains readable against any background color by automatically switching between black and white text based on luminance.
 
 #### Custom Color Profile Creation
 
@@ -199,12 +247,14 @@ useEffect(() => {
 
 ### Best Practices
 
-1. **Always use CSS variables** instead of hardcoding colors (except for custom component consistency)
-2. **Respect the color hierarchy** - primary for main actions, secondary for accents
-3. **Ensure sufficient contrast** - all text colors have been tested against their backgrounds
-4. **Test in both light and dark modes** - the system automatically adapts
-5. **Use semantic color names** - prefer `--text-primary` over `--white`
-6. **For custom components**: Use hardcoded `#1D1D1D` background to match standard elements
+1. **Always use CSS variables** instead of hardcoding colors for proper theme support
+2. **Use `var(--surface-card)` for input backgrounds** - NOT hardcoded `#1D1D1D` for light mode compatibility
+3. **Respect the color hierarchy** - primary for main actions, secondary for accents
+4. **Ensure sufficient contrast** - use `getContrastTextColor()` for text over colored backgrounds
+5. **Test in both light and dark modes** - verify all elements are readable
+6. **Use semantic color names** - prefer `--text-primary` over `--white`
+7. **Dynamic text contrast**: Always calculate text color for labels on color pickers/colored backgrounds
+8. **Custom dropdowns and number inputs**: Must use `var(--surface-card)` background
 
 ### Theme Support
 
@@ -220,12 +270,16 @@ Uses the Framer Color Profile with dark backgrounds (#111111) and light text.
 
 When updating existing plugins to use this color system:
 
-1. Replace hardcoded colors with CSS variables
-2. Update input backgrounds to use `#1D1D1D` or `var(--bg-secondary)`
-3. Add the color constants file to your project
-4. Implement the custom secondary color feature if desired
-5. Test thoroughly in both themes
-6. For custom components, use hardcoded `#1D1D1D` background for consistency
+1. **Replace hardcoded colors with CSS variables**
+2. **CRITICAL**: Change hardcoded `#1D1D1D` backgrounds to `var(--surface-card)` for light mode support
+3. Update custom dropdown buttons to use `var(--surface-card)` background
+4. Update NumberInput components to use `var(--surface-card)` background
+5. Add the `getContrastTextColor()` utility for color label text
+6. Apply dynamic text color to all color picker labels
+7. Add the color constants file to your project
+8. Implement the custom secondary color feature if desired
+9. Test thoroughly in both light and dark themes
+10. Verify all text is readable against backgrounds in both themes
 
 ## Ribbon Wave Monorepo (current architecture)
 
