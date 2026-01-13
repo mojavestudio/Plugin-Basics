@@ -582,6 +582,8 @@ A ready-to-use component for selecting start and end colors for gradients. See `
 
 **Usage:**
 ```tsx
+// Add this import when copying to your React project:
+import * as React from "react"
 import { MultiColorPicker } from './MultiColorPicker'
 
 const [colors, setColors] = useState({

@@ -2,9 +2,11 @@
  * Multi-Color Picker Component
  * A custom color picker that allows selecting two colors (start and end) for gradients
  * Copy-paste ready component for Framer plugins
+ * 
+ * NOTE: When copying this file to a React project, add:
+ * import * as React from "react"
+ * at the top of the file
  */
-
-import * as React from "react"
 
 interface MultiColorPickerProps {
     colorStart: string
