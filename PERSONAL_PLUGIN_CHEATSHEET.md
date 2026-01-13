@@ -1119,8 +1119,6 @@ const VisualsSlider = ({
     max,
     step = 1,
     lineCount = 12,
-    label = "Width",
-    variant = "height",
 }: {
     value: number
     onChange: (value: number) => void
@@ -1128,8 +1126,6 @@ const VisualsSlider = ({
     max: number
     step?: number
     lineCount?: number
-    label?: string
-    variant?: "width" | "height"
 }) => {
     const range = max - min
     const normalizedValue = Math.max(0, Math.min(1, (value - min) / range))
@@ -1139,16 +1135,14 @@ const VisualsSlider = ({
         if (!container) return
         const rect = container.getBoundingClientRect()
         const percent = (event.clientX - rect.left) / rect.width
-        // Add a small buffer to make the last line selectable
-        const adjustedPercent = Math.min(1, percent + (0.5 / lineCount))
-        const newValue = min + adjustedPercent * range
+        const newValue = min + percent * range
         onChange(Math.max(min, Math.min(max, newValue)))
     }
     
     return (
-        <div className={`visualsSlider visualsSlider--${variant}`}>
+        <div className="visualsSlider">
             <div className="visualsSlider-lines" onPointerDown={handlePointerDown}>
-                <div className="visualsSlider-label">{label}</div>
+                <div className="visualsSlider-label">Width</div>
                 <div className="visualsSlider-content">
                     {Array.from({ length: lineCount }).map((_, index) => {
                         const linePosition = (index + 1) / lineCount
@@ -1223,20 +1217,11 @@ const VisualsSlider = ({
     background: var(--accent-primary);
     opacity: 1;
 }
-
-/* Variant-specific styling */
-.visualsSlider--width .visualsSlider-label {
-    /* Custom styling for width variant if needed */
-}
-
-.visualsSlider--height .visualsSlider-label {
-    /* Custom styling for height variant if needed */
-}
 ```
 
 **Usage Examples:**
 ```tsx
-// Track Thickness (1-8 range, 12 lines) - Height variant
+// Track Thickness (1-8 range, 12 lines)
 <label>
     <span>Track Thickness</span>
     <VisualsSlider
@@ -1249,12 +1234,10 @@ const VisualsSlider = ({
         max={8}
         step={0.5}
         lineCount={12}
-        label="Width"
-        variant="height"
     />
 </label>
 
-// Border Width (1-6 range, 16 lines) - Width variant
+// Border Width (1-6 range, 16 lines)
 <label>
     <span>Border Width</span>
     <VisualsSlider
@@ -1267,47 +1250,13 @@ const VisualsSlider = ({
         max={6}
         step={0.5}
         lineCount={16}
-        label="Width"
-        variant="width"
-    />
-</label>
-
-// Bar Height (1-20 range, 12 lines) - Height variant with custom label
-<label>
-    <span>Bar Height</span>
-    <VisualsSlider
-        value={controls.barHeight}
-        onChange={(value) => setControls(prev => ({
-            ...prev,
-            barHeight: value
-        }))}
-        min={1}
-        max={20}
-        step={1}
-        lineCount={12}
-        label="Height"
-        variant="height"
     />
 </label>
 ```
 
-**Key Improvements:**
-- **Last Line Selection Fix**: Added buffer calculation (`percent + (0.5 / lineCount)`) to ensure the last line is fully selectable
-- **Label Prop**: Customizable label text (defaults to "Width")
-- **Variant Prop**: Distinguishes between "width" and "height" usage patterns for consistent styling
-- **CSS Classes**: Component supports variant-specific CSS classes (`.visualsSlider--width`, `.visualsSlider--height`)
-
 **When to Use Each:**
 - **Standard Range Input**: When precise numerical feedback is important
 - **Visual Slider**: When visual feedback and compact design are preferred (recommended for width/thickness controls)
-
----
-
-**VisualsSlider Implementation Status:**
-✅ **COMPLETED** - Successfully integrated with label/variant props and last line selection fix
-- **Date**: 2026-01-12
-- **Features**: Customizable labels, variant support, full range selection
-- **Used In**: Loading Gate plugin (Track Thickness, Border Width, Bar Height controls)
 
 #### Color Pickers
 ```css
@@ -2821,6 +2770,97 @@ Combine both benefits with a primary preview tab and secondary settings tabs:
 // Secondary tabs organize advanced settings
 // Keeps focus on visual feedback while providing depth
 ```
+
+## Color Consistency for Custom Components
+
+### Issue: Custom Dropdown/Input Components Don't Match Standard Elements
+
+When creating custom dropdown or input components (like SearchableFontDropdown or NumberInput), they may not match the background color of standard `<select>` elements, causing visual inconsistency.
+
+### Root Cause
+- Standard `<select>` elements use hardcoded CSS values
+- Custom components often use CSS variables that may not resolve correctly
+- Different rendering paths can cause slight color variations
+
+### Solution: Use Hardcoded Colors for Consistency
+
+For custom dropdown and input components, use hardcoded colors that match the standard elements:
+
+```tsx
+// ❌ Using CSS variables (may not match)
+const SearchableFontDropdown = () => (
+    <button style={{
+        background: "var(--input-background)", // May resolve differently
+        color: "var(--text-primary)",
+        // ... other styles
+    }}>
+        {/* content */}
+    </button>
+)
+
+// ✅ Using hardcoded colors (matches standard elements)
+const SearchableFontDropdown = () => (
+    <button style={{
+        background: "#1D1D1D", // Matches standard select elements
+        color: "var(--text-primary)", // Text color can use variable
+        border: "1px solid var(--border-soft)",
+        borderRadius: "6px",
+        // ... other styles
+    }}>
+        {/* content */}
+    </button>
+)
+
+// ✅ NumberInput component with consistent background
+const NumberInput = ({ value, onChange }) => (
+    <div style={{
+        background: "#1D1D1D", // Matches standard inputs
+        border: "1px solid var(--border-soft)",
+        borderRadius: "6px",
+        // ... container styles
+    }}>
+        <input 
+            style={{
+                background: "transparent", // Input itself is transparent
+                color: "var(--text-primary)",
+                // ... input styles
+            }}
+        />
+        {/* increment/decrement buttons */}
+    </div>
+)
+```
+
+### Key Colors for Framer Plugin UI
+
+| Element | Background | Border | Text |
+|---------|-------------|--------|------|
+| Standard inputs/selects | `#1D1D1D` | `var(--border-soft)` | `var(--text-primary)` |
+| Custom components | `#1D1D1D` (hardcoded) | `var(--border-soft)` | `var(--text-primary)` |
+| Hover states | `var(--ghost-bg)` | `var(--border-strong)` | `var(--text-primary)` |
+| Focus states | `#1D1D1D` | `var(--accent-primary)` | `var(--text-primary)` |
+
+### When to Use This Pattern
+
+- **Custom dropdown components** (SearchableFontDropdown, custom selects)
+- **Number input components** with increment/decrement buttons
+- **Any custom input wrapper** that should match standard form elements
+- **Mixed UI scenarios** where both standard and custom elements appear together
+
+### Benefits
+
+- **Visual consistency** across all form controls
+- **Professional appearance** with no jarring color differences
+- **Maintains accessibility** with proper contrast ratios
+- **Future-proof** against CSS variable resolution issues
+
+### Implementation Checklist
+
+- [ ] Use `#1D1D1D` for custom component backgrounds
+- [ ] Keep `var(--border-soft)` for borders (consistent with standard elements)
+- [ ] Use `var(--text-primary)` for text color (maintains theme compatibility)
+- [ ] Test custom components alongside standard elements
+- [ ] Verify hover/focus states match standard behavior
 
 ---
 
