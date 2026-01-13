@@ -3081,4 +3081,122 @@ const NumberInput = ({ value, onChange }) => (
 
 ---
 
+## Dynamic Intrinsic Sizing Pattern
+
+### Overview
+Components that need different default sizes based on configuration can use dynamic intrinsic sizing while maintaining Framer's layout flexibility.
+
+### When to Use
+- Components with multiple styles/modes that require different default dimensions
+- When you want optimal insertion sizes per configuration
+- When maintaining user flexibility to override sizing is important
+
+### Implementation Pattern
+
+#### 1. Framer Layout Annotations
+```tsx
+/**
+ * Component with dynamic intrinsic sizing based on configuration
+ * - Style A: 600x100, Style B: 600x600, Style C: 400x100
+ */
+
+/** @framerSupportedLayoutWidth any-prefer-fixed */
+/** @framerSupportedLayoutHeight any-prefer-fixed */
+/** @framerDisableUnlink */
+```
+
+#### 2. Dynamic Intrinsic Size Calculation
+```tsx
+// Calculate intrinsic size based on component configuration
+const intrinsicSize = (() => {
+    switch (animationStyle) {
+        case "bar":
+            return { width: 600, height: 100 }
+        case "circle":
+            return { width: 600, height: 600 }
+        case "text":
+            return { width: 400, height: 100 }
+        default:
+            return { width: 300, height: 300 }
+    }
+})()
+```
+
+#### 3. Root Style with Intrinsic Fallback
+```tsx
+const rootStyle: React.CSSProperties = {
+    ...p.style,
+    // Use intrinsic size when no explicit style provided, fallback to 100% for percentage-based styles
+    width: p.style?.width ?? (typeof p.style?.width === "string" && p.style.width.includes("%") ? "100%" : intrinsicSize.width),
+    height: p.style?.height ?? (typeof p.style?.height === "string" && p.style.height.includes("%") ? "100%" : intrinsicSize.height),
+    position: "relative",
+    boxSizing: "border-box",
+    // ... other styles
+}
+```
+
+#### 4. Measured Dimensions Logic
+```tsx
+// Prefer explicit style dimensions, then measured container, then intrinsic size
+const measuredWidth = 
+    (typeof p.style?.width === "number" ? p.style.width : null) ??
+    (containerSize.width > 0 ? containerSize.width : intrinsicSize.width)
+
+const measuredHeight = 
+    (typeof p.style?.height === "number" ? p.style.height : null) ??
+    (containerSize.height > 0 ? containerSize.height : intrinsicSize.height)
+```
+
+### Key Benefits
+
+1. **Optimal Default Sizing** - Each configuration gets its ideal insertion size
+2. **User Flexibility** - `any-prefer-fixed` allows users to switch to auto sizing
+3. **Fallback Safety** - Intrinsic size prevents 0x0 sizing issues
+4. **Responsive Support** - Percentage-based styles still work correctly
+5. **Measurement Integration** - Works with Framer's container measurement system
+
+### Plugin Integration
+
+For plugin insertion, calculate size based on current configuration:
+
+```tsx
+// Plugin/src/App.tsx
+const getInsertionSize = (animationStyle: string) => {
+    switch (animationStyle) {
+        case "bar": return { width: 600, height: 100 }
+        case "circle": return { width: 600, height: 600 }
+        case "text": return { width: 400, height: 100 }
+        default: return { width: 300, height: 300 }
+    }
+}
+
+// During component insertion
+const insertionSize = getInsertionSize(builder.controls.loadBar.animationStyle)
+framer.insertComponent(componentUrl, {
+    width: insertionSize.width,
+    height: insertionSize.height,
+    autoSize: false, // Prevent auto-sizing jitter on insert
+    controls: builder.controls
+})
+```
+
+### Best Practices
+
+1. **Document Size Variations** - Clearly comment what each style/size represents
+2. **Test All Configurations** - Verify each style inserts with correct dimensions
+3. **Maintain Aspect Ratios** - Choose sizes that make sense for each configuration
+4. **Consider Minimum Sizes** - Ensure components are usable at their intrinsic sizes
+5. **Fallback Values** - Always provide a reasonable default size
+
+### Common Patterns
+
+| Component Type | Size Strategy | Example Dimensions |
+|----------------|---------------|-------------------|
+| Progress Bars | Fixed height, variable width | Bar: 600x100, Circle: 600x600 |
+| Text Components | Character-based sizing | Text: 400x100, Icon: 200x200 |
+| Media Components | Aspect-ratio based | Video: 800x450, Image: 600x600 |
+| Interactive Elements | Content-dependent | Button: 200x50, Form: 400x300 |
+
+---
+
 **Remember**: This contains proprietary workflows and shortcuts. Never share this file publicly or include it in plugin packages.
