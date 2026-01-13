@@ -10,6 +10,223 @@
 npm create framer-plugin@latest my-plugin && cd my-plugin && npm install && npm run dev -- --port 5173
 ```
 
+## Framer Plugin Color System
+
+### Overview
+
+Comprehensive color system designed for Framer plugins that ensures consistent theming across light and dark modes while allowing users to customize their plugin's secondary accent color.
+
+### Framer Color Profile
+
+#### Background Colors
+- **`--bg-window`**: #111111 - Main window background
+- **`--bg-secondary`**: #1D1D1D - Popup/secondary background (used for dropdowns, text inputs, number boxes)
+- **`--input-background`**: #1D1D1D - Input field background
+- **`--surface-card`**: #1a1a1a - Card surface
+- **`--surface-panel`**: #161616 - Panel surface
+- **`--surface-background`**: #111111 - Base surface
+
+#### Text Colors
+- **`--text-primary`**: #ffffff - Primary text
+- **`--text-secondary`**: #b0b0b0 - Secondary text
+- **`--text-tertiary`**: #808080 - Tertiary text
+- **`--text-subtle`**: #606060 - Subtle text
+
+#### Accent Colors
+- **`--accent-primary`**: #8550ff - Primary accent (purple)
+- **`--accent-secondary`**: #6b3dd8 - Secondary accent (user customizable)
+- **`--accent-focus-ring`**: rgba(133, 79, 255, 0.3) - Focus ring color
+
+#### Border Colors
+- **`--border-soft`**: #2a2a2a - Soft borders
+- **`--border-strong`**: #404040 - Strong borders
+- **`--checkbox-border`**: #2a2a2a - Checkbox borders
+
+#### Utility Colors
+- **`--ghost-bg`**: #1a1a1a - Ghost button background
+- **`--ghost-text`**: #b0b0b0 - Ghost button text
+- **`--ghost-border`**: #2a2a2a - Ghost button border
+- **`--badge-bg`**: #2a2a2a - Badge background
+- **`--badge-text`**: #b0b0b0 - Badge text
+- **`--preview-border`**: #2a2a2a - Preview border
+- **`--error-text`**: #ff6b6b - Error text
+- **`--card-shadow`**: 0 2px 8px rgba(0, 0, 0, 0.3) - Card shadow
+
+### Implementation
+
+#### CSS Variables Setup
+
+All colors are defined as CSS custom properties (variables) in the `:root` selector of `globals.css`:
+
+```css
+:root {
+    --bg-window: #111111;
+    --bg-secondary: #1D1D1D;
+    --input-background: #1D1D1D;
+    --surface-card: #1a1a1a;
+    --surface-panel: #161616;
+    --surface-background: #111111;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-tertiary: #808080;
+    --text-subtle: #606060;
+    
+    --accent-primary: #8550ff;
+    --accent-secondary: #6b3dd8;
+    --accent-focus-ring: rgba(133, 79, 255, 0.3);
+    
+    --border-soft: #2a2a2a;
+    --border-strong: #404040;
+    --checkbox-border: #2a2a2a;
+    
+    --ghost-bg: #1a1a1a;
+    --ghost-text: #b0b0b0;
+    --ghost-border: #2a2a2a;
+    --badge-bg: #2a2a2a;
+    --badge-text: #b0b0b0;
+    --preview-border: #2a2a2a;
+    --error-text: #ff6b6b;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+```
+
+#### Standard Input Styling
+
+Dropdowns, text inputs, and number boxes use the `#1D1D1D` background:
+
+```css
+input[type="text"],
+input[type="email"],
+input[type="number"],
+select {
+    background: #1D1D1D;
+    color: var(--text-primary);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 5px 10px;
+    height: 32px;
+    font-size: 12px;
+    font-family: monospace;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+```
+
+#### TypeScript Color Interface
+
+```typescript
+interface FramerColorProfile {
+  // Background Colors
+  bgWindow: string;        // Main window background - #111111
+  bgSecondary: string;     // Popup/secondary background - #1D1D1D
+  inputBackground: string; // Input fields background - #1D1D1D
+  surfaceCard: string;     // Card surface - #1a1a1a
+  surfacePanel: string;    // Panel surface - #161616
+  surfaceBackground: string; // Base surface - #111111
+  
+  // Text Colors
+  textPrimary: string;     // Primary text - #ffffff
+  textSecondary: string;   // Secondary text - #b0b0b0
+  textTertiary: string;    // Tertiary text - #808080
+  textSubtle: string;      // Subtle text - #606060
+  
+  // Accent Colors (user customizable secondary)
+  accentPrimary: string;   // Primary accent - #8550ff (purple default)
+  accentSecondary: string; // Secondary accent - user customizable
+  accentFocusRing: string; // Focus ring - rgba(133, 79, 255, 0.3)
+  
+  // Border Colors
+  borderSoft: string;      // Soft borders - #2a2a2a
+  borderStrong: string;    // Strong borders - #404040
+  checkboxBorder: string;  // Checkbox borders - #2a2a2a
+  
+  // Other Colors
+  ghostBg: string;         // Ghost button background - #1a1a1a
+  ghostText: string;       // Ghost button text - #b0b0b0
+  ghostBorder: string;     // Ghost button border - #2a2a2a
+  badgeBg: string;         // Badge background - #2a2a2a
+  badgeText: string;       // Badge text - #b0b0b0
+  previewBorder: string;   // Preview border - #2a2a2a
+  errorText: string;       // Error text - #ff6b6b
+  cardShadow: string;      // Card shadow - CSS shadow value
+}
+```
+
+#### Custom Color Profile Creation
+
+```typescript
+export function createFramerColorProfile(secondaryAccentColor: string): FramerColorProfile {
+  return {
+    ...defaultFramerColors,
+    accentSecondary: secondaryAccentColor,
+    // Update focus ring to match secondary accent
+    accentFocusRing: `${secondaryAccentColor}33`, // Add 20% opacity
+  };
+}
+
+// Apply custom colors to document root
+export function applyColorProfile(colors: FramerColorProfile): void {
+  const root = document.documentElement;
+  
+  // Apply each color as CSS variable
+  Object.entries(colors).forEach(([key, value]) => {
+    const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+    root.style.setProperty(cssVar, value);
+  });
+}
+```
+
+#### Theme Detection and Application
+
+```typescript
+useEffect(() => {
+    const updateTheme = () => {
+        const theme = document.body.dataset.framerTheme || 'light'
+        if (theme === "dark" && builder.secondaryAccentColor) {
+            const customProfile = createFramerColorProfile(builder.secondaryAccentColor)
+            applyColorProfile(customProfile)
+        }
+    }
+    
+    updateTheme()
+    const observer = new MutationObserver(updateTheme)
+    observer.observe(document.body, { attributes: true })
+    return () => observer.disconnect()
+}, [builder.secondaryAccentColor])
+```
+
+### Best Practices
+
+1. **Always use CSS variables** instead of hardcoding colors (except for custom component consistency)
+2. **Respect the color hierarchy** - primary for main actions, secondary for accents
+3. **Ensure sufficient contrast** - all text colors have been tested against their backgrounds
+4. **Test in both light and dark modes** - the system automatically adapts
+5. **Use semantic color names** - prefer `--text-primary` over `--white`
+6. **For custom components**: Use hardcoded `#1D1D1D` background to match standard elements
+
+### Theme Support
+
+The color system supports both light and dark Framer themes. The plugin automatically detects the current theme and applies the appropriate color palette.
+
+#### Light Theme
+Uses a light color palette with white backgrounds and dark text.
+
+#### Dark Theme
+Uses the Framer Color Profile with dark backgrounds (#111111) and light text.
+
+### Migration Guide
+
+When updating existing plugins to use this color system:
+
+1. Replace hardcoded colors with CSS variables
+2. Update input backgrounds to use `#1D1D1D` or `var(--bg-secondary)`
+3. Add the color constants file to your project
+4. Implement the custom secondary color feature if desired
+5. Test thoroughly in both themes
+6. For custom components, use hardcoded `#1D1D1D` background for consistency
+
 ## Ribbon Wave Monorepo (current architecture)
 
 - Root repo: `Ribbon Wave/` (git lives here)
