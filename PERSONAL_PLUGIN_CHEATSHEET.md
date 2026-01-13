@@ -569,6 +569,33 @@ CSS helpers that keep the gradient visible while hiding the native progress fill
 
 This preserves the gradient background while the circular dot shows the current value.
 
+## Multi-Color Picker Component
+
+A ready-to-use component for selecting start and end colors for gradients. See `MultiColorPicker.tsx` in this repository for the complete component.
+
+**Features:**
+- Two-column color picker layout
+- Visual color preview with border separator
+- Hidden native color inputs with custom styled divs
+- TypeScript with proper prop types
+- Framer CSS variable integration
+
+**Usage:**
+```tsx
+import { MultiColorPicker } from './MultiColorPicker'
+
+const [colors, setColors] = useState({
+    colorStart: "#c0b7ff",
+    colorEnd: "#5ad9f7"
+})
+
+<MultiColorPicker
+    colorStart={colors.colorStart}
+    colorEnd={colors.colorEnd}
+    onChange={(type, value) => setColors(prev => ({ ...prev, [type]: value }))}
+/>
+```
+
 ## Carousel Icon Picker Snippet
 
 Use this pattern when you want a horizontally scrolling icon picker with previous/next arrows and an active glow state:
