@@ -3164,6 +3164,60 @@ const NumberInput = ({ value, onChange }) => (
 
 ---
 
+## Component Insertion Patterns
+
+### Framer Component Insert Pattern with Dynamic Sizing
+
+A comprehensive pattern for inserting Framer components with dynamic sizing, permission handling, and fallback mechanisms.
+
+**File**: `FramerComponentInsertPattern.tsx`
+
+**Key Features**:
+- Dynamic intrinsic sizing based on animation style (circle: 300×300, bar: 600×48, text: 600×48)
+- Permission-aware insertion with fallback frame creation
+- Comprehensive error handling with context-aware user messages
+- Component URL management and version stripping
+- Proper attribute mapping and control structure
+- Automatic centering and parent assignment
+
+**Usage Example**:
+```tsx
+import { insertComponentWithFallback, mapControlsToComponentPropertyControls } from './FramerComponentInsertPattern'
+
+const result = await insertComponentWithFallback({
+    componentUrl: "https://framer.com/m/MyComponent-v1abc.js",
+    controls: mapControlsToComponentPropertyControls(pluginControls),
+    animationStyle: "circle",
+    fallbackOptions: {
+        name: "My Component Placeholder",
+        cornerRadius: 8,
+        fills: [{ type: "solid", color: "#1a1a1a" }],
+        pluginData: { originalUrl: componentUrl }
+    },
+    onPermissionError: async (url) => {
+        await framer.notify(`Cannot insert component. Paste this URL manually: ${url}`, { variant: "error" })
+    },
+    onError: async (error, context) => {
+        console.error("Insert failed:", error, context)
+    }
+})
+
+if (result.success) {
+    console.log("Component inserted:", result.componentId)
+    if (result.fallbackUsed) {
+        console.log("Fallback frame was used instead of actual component")
+    }
+}
+```
+
+**Color System**: Uses comprehensive Framer color constants (FRAMER_COLORS) with exact hex values:
+- Backgrounds: #111111 (window), #1D1D1D (secondary), #1C1C1C (inputs)
+- Text: #ffffff (primary), #b0b0b0 (secondary), #808080 (tertiary)
+- Accents: #8550ff (primary), #00d4ff (secondary)
+- Borders: #2a2a2a (soft), #404040 (strong)
+
+**Icon Dependencies**: Requires `@phosphor-icons/react` for UI icons in the full plugin implementation.
+
 ## Dynamic Intrinsic Sizing Pattern
 
 ### Overview
