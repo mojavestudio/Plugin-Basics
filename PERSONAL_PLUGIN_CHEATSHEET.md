@@ -3334,6 +3334,142 @@ framer.insertComponent(componentUrl, {
 | Media Components | Aspect-ratio based | Video: 800x450, Image: 600x600 |
 | Interactive Elements | Content-dependent | Button: 200x50, Form: 400x300 |
 
+### Insert Button Component
+
+#### Overview
+Clean insert button with Phosphor Plus icon and hover text functionality. Fixed positioning issues and rendering problems discovered during development.
+
+#### Key Improvements
+- **Fixed positioning issues** with high z-index and pointerEvents
+- **Inline SVG PlusIcon** for reliable rendering (avoids Phosphor import issues)
+- **Proper hover text animation** (appears to left of icon, not tooltip)
+- **Prevents clipping** with overflow: visible
+- **Works inside containers** with pointerEvents: none
+
+#### Implementation
+```tsx
+// Inline SVG PlusIcon for reliable rendering
+const PlusIcon = ({ size = 16 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+        <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+)
+
+// Insert button with proper positioning and hover
+<button
+    onClick={insertComponent}
+    disabled={isInserting}
+    className="insertButton"
+    style={{
+        position: "absolute",
+        top: "16px",
+        right: "32px",
+        width: "40px",
+        height: "40px",
+        background: "none",
+        border: "none",
+        color: "var(--text-primary)",
+        cursor: "pointer",
+        zIndex: 10000,
+        textAlign: "left",
+        pointerEvents: "auto",
+        overflow: "visible",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center"
+    }}
+>
+    <PlusIcon size={20} />
+    <span className="insertButtonText">Insert</span>
+</button>
+```
+
+#### CSS Styling
+```css
+.insertButton {
+  position: relative;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  width: auto;
+  padding: 8px 8px;
+  z-index: 1000;
+}
+
+.insertButton:hover {
+  background: var(--ghost-bg);
+  padding: 8px 12px;
+  justify-content: flex-start;
+}
+
+.insertButton:hover .insertButtonText {
+  opacity: 1;
+  margin-right: 4px;
+}
+
+.insertButtonText {
+  opacity: 0;
+  margin-right: 0;
+  transition: opacity 0.2s ease, margin-right 0.2s ease;
+  white-space: nowrap;
+  font-size: 12px;
+  order: -1;
+}
+
+.insertButton svg {
+  color: var(--text-primary) !important;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  flex-shrink: 0;
+}
+
+.insertButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.insertButton:disabled:hover {
+  background: none;
+  width: 40px;
+  padding: 8px;
+  justify-content: center;
+}
+
+.insertButton:disabled:hover .insertButtonText {
+  opacity: 0;
+  margin-right: 0;
+}
+```
+
+#### Common Issues & Solutions
+1. **Icon not visible**: Use inline SVG instead of Phosphor imports
+2. **Button clipped**: Set `overflow: visible` on parent container and `z-index: 10000`
+3. **Click not working**: Add `pointerEvents: "auto"` to override parent container
+4. **Hover text wrong position**: Use `order: -1` and `margin-right` instead of tooltip positioning
+
+#### Usage in Overlay Container
+```tsx
+// Parent container with proper settings
+<div style={{
+    position: "absolute",
+    top: "0px",
+    left: 0,
+    right: 0,
+    width: "100%",
+    margin: 0,
+    height: "250px",
+    pointerEvents: "none",
+    zIndex: 2000,
+    overflow: "visible" // Important for hover expansion
+}}>
+    <InsertButton onInsert={handleInsert} />
+</div>
+```
+
 ---
 
 **Remember**: This contains proprietary workflows and shortcuts. Never share this file publicly or include it in plugin packages.

@@ -1,0 +1,72 @@
+/**
+ * Insert Button CSS - Phosphor Plus Icon with Hover Text
+ * 
+ * CSS classes for the insert button component with hover text functionality.
+ * Uses Framer plugin CSS variables for proper theming.
+ * 
+ * Key improvements:
+ * - Fixed hover text animation (appears to left of icon)
+ * - Proper flexbox layout for consistent sizing
+ * - SVG styling for reliable icon rendering
+ * - Disabled state handling
+ */
+
+/* Insert button container - enables hover text positioning */
+.insertButton {
+  position: relative;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  width: auto;
+  padding: 8px 8px;
+  z-index: 1000;
+}
+
+.insertButton:hover {
+  background: var(--ghost-bg);
+  padding: 8px 12px;
+  justify-content: flex-start;
+}
+
+.insertButton:hover .insertButtonText {
+  opacity: 1;
+  margin-right: 4px;
+}
+
+.insertButtonText {
+  opacity: 0;
+  margin-right: 0;
+  transition: opacity 0.2s ease, margin-right 0.2s ease;
+  white-space: nowrap;
+  font-size: 12px;
+  order: -1;
+}
+
+.insertButton svg {
+  color: var(--text-primary) !important;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  flex-shrink: 0;
+}
+
+/* Loading and disabled states */
+.insertButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.insertButton:disabled:hover {
+  background: none;
+  width: 40px;
+  padding: 8px;
+  justify-content: center;
+}
+
+.insertButton:disabled:hover .insertButtonText {
+  opacity: 0;
+  margin-right: 0;
+}
